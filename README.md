@@ -8,13 +8,13 @@
    ## Python pip安装selenium
 
    ```bash
-   pip install selenium
+pip install selenium
    ```
 
    ## CentOS 或其他版本Linux安装chrome
 
    ```bash
-   curl https://intoli.com/install-google-chrome.sh | bash
+curl https://intoli.com/install-google-chrome.sh | bash
    ```
 
    ## 如果是macOS或windows
@@ -26,7 +26,7 @@
    先查看chrome版本
 
    ```
-   google-chrome --version
+google-chrome --version
    ```
 
    再下载对应版本的driver
@@ -38,8 +38,7 @@
    然后拼接并解压
 
    ```bash
-   wget http://npm.taobao.org/mirrors/chromedriver/84.0.4147.30/chromedriver_linux64.zip
-   unzip chromedriver_linux64.zip
+wget http://npm.taobao.org/mirrors/chromedriver/84.0.4147.30/chromedriver_linuxunzip chromedriver_linux64.zip
    ```
 
    ## 放入主程序
@@ -122,20 +121,41 @@
                # 提交
                driver.find_element_by_xpath("//*[@id='tpost']").click()
                time.sleep(1)
-               try:
-                   driver.find_element_by_xpath("//*[text()='提交成功！']")
-                   print('打卡成功！')
-               except:
-                   try:
-                       driver.find_element_by_xpath("//*[text()='当天已经提交过，是否继续提交？']")
-                       print("已打卡过！")
-                       driver.find_element_by_xpath("//a[@class='layui-layer-btn0']").click()
-                   except:
-                       print("打卡失败！请重新开始")
-               driver.find_element_by_xpath("//a[@class='layui-layer-btn0']").click()
-               time.sleep(3)
-               print("即将退出程序...")
-               driver.quit()
+                           try:
+                driver.find_element_by_xpath("//*[text()='提交成功！']")
+                print('打卡成功！')
+                driver.find_element_by_xpath("//a[@class='layui-layer-btn0']").click()
+                ddpost("今天的打卡已经成功执行")
+                wxpost("主人，打卡成功啦~")
+            except:
+                try:
+                    driver.find_element_by_xpath("//*[text()='当天已经提交过，是否继续提交？']")
+                    print("已打卡过！")
+                    driver.find_element_by_xpath("//a[@class='layui-layer-btn0']").click()
+                    ddpost("今天的打卡已经成功执行")
+                    wxpost("主人，打卡GET啦~")
+                except:
+                    print("打卡失败！请重新开始")
+                    driver.find_element_by_xpath("//a[@class='layui-layer-btn0']").click()
+                    ddpost("今天的打卡失败，请手动打卡")
+                    wxpost("今天的打卡失败，请手动打卡")            
+            time.sleep(3)
+            print("即将退出程序...")
+            driver.quit()
+
+#钉钉webhook机器人推送
+def ddpost(content):
+	timenow = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+	url = "https://oapi.dingtalk.com/robot/send?access_token="+config['ddkey']
+	data = '{"msgtype":"markdown","markdown":{"title":"每日疫情打卡","text":"# 每日打卡提醒 \n >### 消息提示：'+ content +' \n >### 打卡时间：'+ timenow +'"}}'
+	headers = {'Content-Type':'application/json'}
+	byte_data = data.encode("utf-8")
+	rep = requests.post(url=url, data=byte_data, headers=headers)
+
+#微信server酱机器人推送
+def wxpost(content):
+	driver.get("https://sc.ftqq.com/"+config['wxkey']+"?text="+content)
+
    
    # 主函数
    if __name__ == '__main__':
@@ -151,7 +171,9 @@
        "学号": "xxxxxx",
        "密码": "xxxxxx",
        "现人员位置": "江苏省内其他地区",
-       "家庭地址": "home"
+       "家庭地址": "home",
+       "ddkey":"钉钉webhook的accesskey",
+       "wxkey":"server酱的accesskey"
    }
    ```
 
@@ -163,9 +185,18 @@
 
    可以通过定时任务来自动化进行打卡操作
 
-   ## 脑洞大开
+   ## 自动推送
 
    可以在打卡成功后自定义推送给自己的邮箱或者qq微信来实现推送功能
+   如果需要自动打卡，可以在config.json文件中的ddkey当中填写你申请的钉钉webhook机器人accesskey
+
+![image-20200808103315685](https://tva1.sinaimg.cn/large/007S8ZIlgy1ghj77cpgjdj30ci04u0t5.jpg)   
+
+或在wxkey当中填写微信server酱公众号的accesskey
+
+![image-20200808103329886](https://tva1.sinaimg.cn/large/007S8ZIlgy1ghj77lggymj30d7062gmm.jpg)
+
+这样均可以实现自动化打卡
 
    ## 致谢名单
 

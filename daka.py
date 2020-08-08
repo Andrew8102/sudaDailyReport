@@ -1,6 +1,8 @@
 # encoding=utf-8
 
 from selenium import webdriver
+from time import strftime,gmtime
+import requests
 import time
 import json
 
@@ -71,25 +73,39 @@ def operate_dk(driver):
                 driver.find_element_by_xpath("//*[text()='提交成功！']")
                 print('打卡成功！')
                 driver.find_element_by_xpath("//a[@class='layui-layer-btn0']").click()
-                #driver.get("https://sc.ftqq.com/SCU103849Tc9d792c9c8571a6e0d7957f4ce5779845efd48842ceac.send?text=主人，打卡成功啦~")
+                ddpost("今天的打卡已经成功执行")
+                wxpost("主人，打卡成功啦~")
             except:
                 try:
                     driver.find_element_by_xpath("//*[text()='当天已经提交过，是否继续提交？']")
                     print("已打卡过！")
                     driver.find_element_by_xpath("//a[@class='layui-layer-btn0']").click()
-                    #driver.get("https://sc.ftqq.com/SCU103849Tc9d792c9c8571a6e0d7957f4ce5779845efd48842ceac.send?text=主人，打卡Get啦~")
+                    ddpost("今天的打卡已经成功执行")
+                    wxpost("主人，打卡GET啦~")
                 except:
                     print("打卡失败！请重新开始")
                     driver.find_element_by_xpath("//a[@class='layui-layer-btn0']").click()
-                    #driver.get("https://sc.ftqq.com/SCU103849Tc9d792c9c8571a6e0d7957f4ce5779845efd48842ceac.send?text=失败啦，请手动打卡~")
-            
-            
+                    ddpost("今天的打卡失败，请手动打卡")
+                    wxpost("今天的打卡失败，请手动打卡")            
             time.sleep(3)
             print("即将退出程序...")
             driver.quit()
 
+#钉钉webhook机器人推送
+def ddpost(content):
+	timenow = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+	url = "https://oapi.dingtalk.com/robot/send?access_token="+config['ddkey']
+	data = '{"msgtype":"markdown","markdown":{"title":"每日疫情打卡","text":"# 每日打卡提醒 \n >### 消息提示：'+ content +' \n >### 打卡时间：'+ timenow +'"}}'
+	headers = {'Content-Type':'application/json'}
+	byte_data = data.encode("utf-8")
+	rep = requests.post(url=url, data=byte_data, headers=headers)
+
+#微信server酱机器人推送
+def wxpost(content):
+	driver.get("https://sc.ftqq.com/"+config['wxkey']+".send?text="+content)
+
 # 主函数
 if __name__ == '__main__':
-    print("这是一个自动健康打卡的程序。\n\n请在同目录下的config.json中配置打卡信息，例如：\n'学号': '1827405055',\n'密码': '12345678',\n'现人员位置': '在苏州',      (请注意只可填入以下四项中的任意一项：'留校', '在苏州', '江苏省内其他地区', '在其他地区')\n'家庭地址': '工业园区'\n其余所有属性均为打卡系统自动填充的上一次打卡信息\n\n程序即将启动...")
+    print("这是一个自动健康打卡的程序。\n\n请在同目录下的config.json中配置打卡信息，例如：\n'学号': '1827405055',\n'密码': '12345678',\n'现人员位置': '在苏州',      (请注意只可填入以下四项中的任意一项：'留校', '在苏州', '江苏省内其他地区', '在其他地区')\n'家庭地址': '工业园区'\n其余所有属性均为打卡系统自动填充的上一次打卡信息\n如果需要自动打卡，可以在ddkey或wxkey当中填写你申请的钉钉webhook机器人accesskey或在wxkey当中填写微信server酱公众号的accesskey\n\n程序即将启动...")
     driver = openChrome()
     operate_dk(driver)
