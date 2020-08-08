@@ -38,7 +38,8 @@ google-chrome --version
    然后拼接并解压
 
    ```bash
-wget http://npm.taobao.org/mirrors/chromedriver/84.0.4147.30/chromedriver_linuxunzip chromedriver_linux64.zip
+wget http://npm.taobao.org/mirrors/chromedriver/84.0.4147.30/chromedriver_linux
+unzip chromedriver_linux64.zip
    ```
 
    ## 放入主程序
@@ -197,6 +198,12 @@ def wxpost(content):
 ![image-20200808103329886](https://tva1.sinaimg.cn/large/007S8ZIlgy1ghj77lggymj30d7062gmm.jpg)
 
 这样均可以实现自动化打卡
+
+## 更新
+
+0730 更新打卡的地址
+
+0808 新增自动推送
 
    ## 致谢名单
 
