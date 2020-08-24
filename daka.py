@@ -1,7 +1,7 @@
 # encoding=utf-8
 
 from selenium import webdriver
-from time import strftime, gmtime
+from time import strftime, localtime
 import requests
 import time
 import json
@@ -25,8 +25,6 @@ def find(driver, str):
         return True
 
 # 流程
-
-
 def operate_dk(driver):
     # 打开配置文件
     try:
@@ -110,7 +108,7 @@ def operate_dk(driver):
 def ddpost(content):
     with open("config.json", encoding='utf-8') as f:
         config = json.load(f)
-    timenow = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    timenow = strftime("%Y-%m-%d %H:%M:%S", localtime())
     url = "https://oapi.dingtalk.com/robot/send?access_token="+config['ddkey']
     data = '{"msgtype":"markdown","markdown":{"title":"每日疫情打卡","text":"# 每日打卡提醒 \n >### 消息提示：' + \
         content + ' \n >### 打卡时间：' + timenow + '"}}'
