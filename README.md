@@ -226,6 +226,8 @@ if __name__ == '__main__':
 
 0824 更新温度打卡
 
+0828 日常更新登陆页面
+
    ## 致谢名单
 
    1. [CentOS7下无界面使用Selenium+chromedriver进行自动化测试](https://blog.csdn.net/pengjunlee/article/details/91997908?)
