@@ -5,14 +5,22 @@ from time import strftime, localtime
 import requests
 import time
 import json
+import os
 
 # 开启浏览器
 
 
+# 开启浏览器
 def openChrome():
-    option = webdriver.ChromeOptions()
-    option.add_argument('disable-infobars')
-    driver = webdriver.Chrome(options=option)
+    options = webdriver.ChromeOptions()
+    options.add_argument('--no-sandbox') # 解决DevToolsActivePort文件不存在的报错
+    options.add_argument('window-size=1600x900') # 指定浏览器分辨率
+    options.add_argument('--disable-gpu') # 谷歌文档提到需要加上这个属性来规避bug
+    options.add_argument('--hide-scrollbars') # 隐藏滚动条, 应对一些特殊页面
+    options.add_argument('blink-settings=imagesEnabled=false') # 不加载图片, 提升速度
+    options.add_argument('--headless') # 浏览器不提供可视化页面.linux下如果系统不支持可视化不加这条会启动失败
+    options.add_argument('disable-infobars')
+    driver = webdriver.Chrome(options=options,executable_path='./chromedriver')
     return driver
 
 
@@ -34,6 +42,7 @@ def operate_dk(driver):
             config = json.load(f)
     except:
         print("配置文件错误！请检查配置文件是否与py文件放置于同一目录下，或配置文件是否出错！\n请注意'现人员位置'只可填入以下四项中的任意一项：'留校', '在苏州', '江苏省内其他地区', '在其他地区'")
+        driver.quit()
         return -1
     else:
         # 老版本登陆
@@ -64,21 +73,28 @@ def operate_dk(driver):
 
         except:
             print('登陆失败！请检查学号密码是否正确')
+            os.system('taskkill /im ./chromedriver /F')
             return -1
         else:
             print('登录成功！')
             url = "http://aff.suda.edu.cn/_web/fusionportal/detail.jsp?_p=YXM9MSZwPTEmbT1OJg__&id=2749&entranceUrl=http%3A%2F%2Fdk.suda.edu.cn%2Fdefault%2Fwork%2Fsuda%2Fjkxxtb%2Fjkxxcj.jsp&appKey=com.sudytech.suda.xxhjsyglzx.jkxxcj."
             driver.get(url)
+            print('访问页面')
             # 这个页面必须点两次，不晓得为啥
             time.sleep(1)
-            driver.find_element_by_xpath(
-                "/html/body/div/div[2]/div/section/div/div[2]/div[1]/a[1]").click()
-            time.sleep(1)
-            driver.find_element_by_xpath(
-                "//*[@class='action-btn action-do']").click()
-            # 切换到小框内
-            iframe1 = driver.find_element_by_id("layui-layer-iframe1")
-            driver.switch_to.frame(iframe1)
+            try:
+                driver.find_element_by_xpath(
+                    "/html/body/div/div[2]/div/section/div/div[2]/div[1]/a[1]").click()
+                time.sleep(1)
+                print('准备点击小窗口')
+                driver.find_element_by_xpath(
+                    "//*[@class='action-btn action-do']").click()
+                # 切换到小框内
+                print("切换到小框内")
+                iframe1 = driver.find_element_by_id("layui-layer-iframe1")
+                driver.switch_to.frame(iframe1)
+            except:
+                driver.quit()
             flag = False
             while(flag == False):
                 time.sleep(1)
@@ -97,6 +113,7 @@ def operate_dk(driver):
             driver.find_element_by_xpath("//*[@id='radio_sfyxglz29']").click()
 
             # 提交
+            print("submit")
             driver.find_element_by_xpath("//*[@id='tpost']").click()
             time.sleep(1)
             try:
@@ -121,9 +138,12 @@ def operate_dk(driver):
                         "//a[@class='layui-layer-btn0']").click()
                     ddpost("今天的打卡失败，请手动打卡")
                     wxpost("今天的打卡失败，请手动打卡")
+                    driver.quit()
+                    os.system('taskkill /im ./chromedriver /F')
             time.sleep(3)
             print("即将退出程序...")
             driver.quit()
+            os.system('taskkill /im ./chromedriver /F')
 
 # 钉钉webhook机器人推送
 
