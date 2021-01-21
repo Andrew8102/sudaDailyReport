@@ -17,8 +17,8 @@ def openChrome():
     options.add_argument('window-size=1600x900') # 指定浏览器分辨率
     options.add_argument('--disable-gpu') # 谷歌文档提到需要加上这个属性来规避bug
     options.add_argument('--hide-scrollbars') # 隐藏滚动条, 应对一些特殊页面
-    options.add_argument('blink-settings=imagesEnabled=false') # 不加载图片, 提升速度
-    options.add_argument('--headless') # 浏览器不提供可视化页面.linux下如果系统不支持可视化不加这条会启动失败
+    #options.add_argument('blink-settings=imagesEnabled=false') # 不加载图片, 提升速度
+    #options.add_argument('--headless') # 浏览器不提供可视化页面.linux下如果系统不支持可视化不加这条会启动失败
     options.add_argument('disable-infobars')
     driver = webdriver.Chrome(options=options,executable_path='./chromedriver')
     return driver
@@ -73,7 +73,7 @@ def operate_dk(driver):
 
         except:
             print('登陆失败！请检查学号密码是否正确')
-            os.system('taskkill /im ./chromedriver /F')
+            os.system('killall chromedriver')
             return -1
         else:
             print('登录成功！')
@@ -99,18 +99,40 @@ def operate_dk(driver):
             while(flag == False):
                 time.sleep(1)
                 flag = find(driver, "//*[text()='"+config["学号"]+"']")
+
+            # 填写体温
             elem = driver.find_element_by_id("input_swtw")
             elem.send_keys("36.8")
             elem = driver.find_element_by_id("input_xwtw")
             elem.send_keys("36.8")
-            driver.find_element_by_xpath("//*[@id='checkbox_jkzk35']").click()
-            xrywz = {'在校': 'radio_xrywz5', '在苏州': 'radio_xrywz7',
-                     '江苏省内其他地区': 'radio_xrywz9', '在其他地区': 'radio_xrywz23'}
-            driver.find_element_by_xpath(
-                "//*[@id='"+xrywz[config["现人员位置"]]+"']").click()
+
+            ## 个人健康状况-正常
+            driver.find_element_by_xpath("//*[@id='checkbox_jkzk33']").click()
+            
+            #xrywz = {'在校': 'radio_xrywz5', '在苏州': 'radio_xrywz7','江苏省其他地区': 'radio_xrywz9', '在其他地区': 'radio_xrywz23'}
+            #driver.find_element_by_xpath("//*[@id='"+xrywz[config["现人员位置"]]+"']").click()
+
+            # 更新后通过select来选择人员位置地址
+            xrywz = {'在校': '2', '在苏州': '3','江苏省其他地区': '4', '在其他地区': '7'}
+            driver.find_element_by_xpath("//*[@id='select2-select_xrywz-container']").click()
+            driver.find_element_by_xpath('//*[@id="select2-select_xrywz-results"]/li/ul/li['+xrywz[config["现人员位置"]]+']').click()
+
+            # 输入家庭地址
             elem = driver.find_element_by_id("input_jtdz")
             elem.send_keys(config["家庭地址"])
-            driver.find_element_by_xpath("//*[@id='radio_sfyxglz29']").click()
+
+            # 是否医学隔离中
+            driver.find_element_by_xpath("//*[@id='radio_sfyxglz7']").click()
+            # 当日行动轨迹是否外出
+            driver.find_element_by_xpath("//*[@id='radio_sfywc11']").click()
+            # 是否与新冠确诊病例/无症状感染者接触过
+            driver.find_element_by_xpath("//*[@id='radio_sfygrzjcg15']").click()
+            # 是否与新冠确诊病例/无症状感染者有行程轨迹交叉
+            driver.find_element_by_xpath("//*[@id='radio_sfyxcgjjc19']").click()
+            # 是否有中高风险地区旅居史（包括途径中高风险地区）
+            driver.find_element_by_xpath("//*[@id='radio_sfyzgfxljs23']").click()
+            # 是否与中高风险地区人员接触
+            driver.find_element_by_xpath("//*[@id='radio_sfyzgfxryjc27']").click()
 
             # 提交
             print("submit")
@@ -139,11 +161,11 @@ def operate_dk(driver):
                     ddpost("今天的打卡失败，请手动打卡")
                     wxpost("今天的打卡失败，请手动打卡")
                     driver.quit()
-                    os.system('taskkill /im ./chromedriver /F')
+                    os.system('killall chromedriver')
             time.sleep(3)
             print("即将退出程序...")
             driver.quit()
-            os.system('taskkill /im ./chromedriver /F')
+            os.system('killall chromedriver')
 
 # 钉钉webhook机器人推送
 
@@ -172,6 +194,6 @@ def wxpost(content):
 
 # 主函数
 if __name__ == '__main__':
-    print("这是一个自动健康打卡的程序。\n\n请在同目录下的config.json中配置打卡信息，例如：\n'学号': '1827405055',\n'密码': '12345678',\n'现人员位置': '在苏州',      (请注意只可填入以下四项中的任意一项：'留校', '在苏州', '江苏省内其他地区', '在其他地区')\n'家庭地址': '工业园区'\n其余所有属性均为打卡系统自动填充的上一次打卡信息\n如果需要自动打卡，可以在ddkey或wxkey当中填写你申请的钉钉webhook机器人accesskey或在wxkey当中填写微信server酱公众号的accesskey\n\n程序即将启动...")
+    print("这是一个自动健康打卡的程序。\n\n请在同目录下的config.json中配置打卡信息，例如：\n'学号': '1827405055',\n'密码': '12345678',\n'现人员位置': '在苏州',      (请注意只可填入以下四项中的任意一项：'在校', '在苏州', '江苏省其他地区', '在其他地区')\n'家庭地址': '工业园区'\n其余所有属性均为打卡系统自动填充的上一次打卡信息\n如果需要自动打卡，可以在ddkey或wxkey当中填写你申请的钉钉webhook机器人accesskey或在wxkey当中填写微信server酱公众号的accesskey\n\n程序即将启动...")
     driver = openChrome()
     operate_dk(driver)
