@@ -1,10 +1,9 @@
 # -*- coding:utf-8 -*-
-"""
-@author: 古时月
-@file: main.py
-@time: 2021/1/21 11:17
 
-"""
+
+
+
+
 import os
 from daka import Daka
 
