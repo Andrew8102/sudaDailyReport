@@ -1,10 +1,8 @@
 # -*- coding:utf-8 -*-
-"""
-@author: 古时月
-@file: daka.py
-@time: 2021/1/21 10:54
 
-"""
+
+
+
 from selenium import webdriver
 import requests
 from selenium.webdriver.support.ui import Select
